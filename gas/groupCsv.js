@@ -7,7 +7,7 @@ var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
  */
 function groupNonPriorityLanguages() {
   var rowIndex = 0;
-  var keepHeaders = ["Filename", "StringID", "Description", "Placeholders", "en_US", "ar", "cs"];
+  var keepHeaders = ["Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
   var headers = spreadsheet.getDataRange().getValues()[rowIndex];
   group(keepHeaders, headers, rowIndex);
 
