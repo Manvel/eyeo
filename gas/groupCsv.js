@@ -7,17 +7,18 @@ var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
  */
 function groupNonPriorityLanguages() {
   var rowIndex = 0;
-  var keepHeaders = ["Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
+  var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
   var headers = spreadsheet.getDataRange().getValues()[rowIndex];
   group(keepHeaders, headers, rowIndex);
 
-  var columnIndex = 1;
-  var keepStrings = ["StringID", "options_page_title", "options_tab_help"];
+  var columnIndex = 2;
+  var keepStrings = [];
   var stringList = spreadsheet.getDataRange().getValues().map(function(value)
   {
     return value[columnIndex];
   });
-  group(keepStrings, stringList, columnIndex, true);
+  if (keepStrings.length)
+    group(keepStrings, stringList, columnIndex, true);
 };
 
 /**
@@ -70,8 +71,12 @@ function createGroup(groupStart, groupAmount, selectingIndex, isColumn)
   }
 }
 
-function collapseAll()
+function collapseAllRowGroups()
 {
   spreadsheet.collapseAllRowGroups();
+}
+
+function collapseAllColumnGroups()
+{
   spreadsheet.collapseAllColumnGroups();
 }
