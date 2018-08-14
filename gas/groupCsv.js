@@ -21,6 +21,61 @@ function groupNonPriorityLanguages() {
     group(keepStrings, stringList, columnIndex, true);
 };
 
+function highlighAddModify()
+{
+  var lastColumn = SpreadsheetApp.getActiveSheet().getLastColumn();
+  var columnIndex = 0;
+  var stringList = spreadsheet.getDataRange().getValues().map(function(value)
+  {
+    return value[columnIndex];
+  });
+  for (var i = 0; i < stringList.length; i++)
+  {
+    var color = "";
+    if (stringList[i] == "Modified")
+    {
+      color = "#ffde97";
+    }
+    else if (stringList[i] == "Added")
+    {
+      color = "#bbd1a8";
+    }
+    if (!color)
+      continue
+
+    var selectRange = spreadsheet.getRange(i + 1, columnIndex + 1, 1, lastColumn);
+    selectRange.setBackground(color);
+  }
+}
+
+// TODO: Fix me
+function protectStringId()
+{
+  var columnIndex = 2;
+  var lastRow = SpreadsheetApp.getActiveSheet().getLastRow();
+  //var stringIdRange = spreadsheet.getRange(1, columnIndex + 1, lastRow, 1);
+  var stringIdRange = SpreadsheetApp.getActive().getRange('A1:B10');
+  var myValues = stringIdRange.getValues();
+  var protection = stringIdRange.protect();
+  protection.setDescription("Protect StringIds from being edited");
+  var editors = protection.getEditors();
+  protection.removeEditor(protection.getEditors());
+  protection.setDomainEdit(false);
+}
+
+function removeAllProtections()
+{
+  // Remove all range protections in the spreadsheet that the user has permission to edit.
+  var ss = SpreadsheetApp.getActive();
+  var protections = ss.getProtections(SpreadsheetApp.ProtectionType.RANGE);
+  for (var i = 0; i < protections.length; i++) {
+    var protection = protections[i];
+    if (protection.canEdit()) {
+      protection.remove();
+    }
+  }
+}
+
 /**
  * @param {Array} filters array of column or row filters
  * @param {Array} items array of column or row
