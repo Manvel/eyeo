@@ -1,6 +1,18 @@
 /** @OnlyCurrentDoc */
 
 var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+var lastColumn = SpreadsheetApp.getActiveSheet().getLastColumn();
+var lastRow = SpreadsheetApp.getActiveSheet().getLastRow();
+
+function applySensibleDefaults()
+{
+  wrapWholeSheet();
+  protectNonTranslationRelatedRow();
+  highlighAddModify();
+  freezeHeaderAndStyle();
+  groupNonPriorityLanguages();
+  collapseAllColumnGroups();
+}
 
 /**
  * Group column and rows that doesn't match filters
@@ -9,7 +21,7 @@ function groupNonPriorityLanguages() {
   var rowIndex = 0;
   var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
   var headers = spreadsheet.getDataRange().getValues()[rowIndex];
-  group(keepHeaders, headers, rowIndex);
+  group_(keepHeaders, headers, rowIndex);
 
   var columnIndex = 2;
   var keepStrings = [];
@@ -18,49 +30,72 @@ function groupNonPriorityLanguages() {
     return value[columnIndex];
   });
   if (keepStrings.length)
-    group(keepStrings, stringList, columnIndex, true);
+    group_(keepStrings, stringList, columnIndex, true);
 };
 
-function highlighAddModify()
+function highlightRowByColumnText_(columnNumber, text, color)
 {
-  var lastColumn = SpreadsheetApp.getActiveSheet().getLastColumn();
-  var columnIndex = 0;
   var stringList = spreadsheet.getDataRange().getValues().map(function(value)
   {
-    return value[columnIndex];
+    return value[columnNumber - 1];
   });
   for (var i = 0; i < stringList.length; i++)
   {
-    var color = "";
-    if (stringList[i] == "Modified")
+    if (stringList[i] == text)
     {
-      color = "#ffde97";
+      var selectRange = spreadsheet.getRange(i + 1, columnNumber, 1, lastColumn);
+      selectRange.setBackground(color);
     }
-    else if (stringList[i] == "Added")
-    {
-      color = "#bbd1a8";
-    }
-    if (!color)
-      continue
-
-    var selectRange = spreadsheet.getRange(i + 1, columnIndex + 1, 1, lastColumn);
-    selectRange.setBackground(color);
   }
 }
 
-// TODO: Fix me
-function protectStringId()
+function highlighAddModify()
 {
-  var columnIndex = 2;
-  var lastRow = SpreadsheetApp.getActiveSheet().getLastRow();
-  //var stringIdRange = spreadsheet.getRange(1, columnIndex + 1, lastRow, 1);
-  var stringIdRange = SpreadsheetApp.getActive().getRange('A1:B10');
-  var myValues = stringIdRange.getValues();
-  var protection = stringIdRange.protect();
-  protection.setDescription("Protect StringIds from being edited");
-  var editors = protection.getEditors();
-  protection.removeEditor(protection.getEditors());
-  protection.setDomainEdit(false);
+  highlightRowByColumnText_(1, "Added", "#bbd1a8");
+  highlightRowByColumnText_(1, "Modified", "#ffde97");
+}
+
+function protectRange_(range)
+{
+  var protection = range.protect().setDescription('Protected by eyeo');
+
+  protection.addEditor(Session.getEffectiveUser());
+  protection.removeEditors(protection.getEditors());
+  if (protection.canDomainEdit()) {
+    protection.setDomainEdit(false);
+  }
+}
+
+function protectRows_(startingFrom, howManyRows)
+{
+  var range = spreadsheet.getRange(startingFrom, 1, howManyRows, lastColumn);
+  protectRange_(range);
+}
+
+function protectColumns_(startingFrom, howManyColumns)
+{
+  var range = spreadsheet.getRange(1, startingFrom, lastRow, howManyColumns);
+  protectRange_(range);
+}
+
+function protectNonTranslationRelatedRow()
+{
+  protectRows_(1, 1);
+  protectColumns_(1, 5);
+}
+
+function freezeHeaderAndStyle()
+{
+  var range = spreadsheet.getRange(1, 1, 1, lastColumn);
+  spreadsheet.setFrozenRows(1);
+  range.setHorizontalAlignment("center");
+  range.setFontWeight("bold");
+}
+
+function wrapWholeSheet()
+{
+  var range = spreadsheet.getRange(1, 1, lastRow, lastColumn);
+  range.setWrap(true);
 }
 
 function removeAllProtections()
@@ -82,7 +117,7 @@ function removeAllProtections()
  * @param {Number} selectingIndex Column or row index
  * @param {Boolen} isColumn
  */
-function group(filters, items, selectingIndex, isColumn)
+function group_(filters, items, selectingIndex, isColumn)
 {
   var groupStart = null;
   for (var i = 0; i < items.length; i++)
@@ -93,7 +128,7 @@ function group(filters, items, selectingIndex, isColumn)
       if (groupStart != null)
       {
         // getRange(row, column, numRows, numColumns)
-        createGroup(groupStart, i - groupStart, selectingIndex, isColumn);
+        createGroup_(groupStart, i - groupStart, selectingIndex, isColumn);
         groupStart = null;
       }
     }
@@ -103,7 +138,7 @@ function group(filters, items, selectingIndex, isColumn)
         groupStart = i;
     } 
   }
-  createGroup(groupStart, items.length - groupStart, selectingIndex, isColumn);
+  createGroup_(groupStart, items.length - groupStart, selectingIndex, isColumn);
 }
 
 /**
@@ -112,7 +147,7 @@ function group(filters, items, selectingIndex, isColumn)
  * @param {Number} selectingIndex Column or row index
  * @param {Boolean} isColumn 
  */
-function createGroup(groupStart, groupAmount, selectingIndex, isColumn)
+function createGroup_(groupStart, groupAmount, selectingIndex, isColumn)
 {
   if (groupStart, selectingIndex, isColumn)
   {
