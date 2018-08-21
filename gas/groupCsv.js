@@ -14,24 +14,20 @@ function applySensibleDefaults()
   collapseAllColumnGroups();
 }
 
-/**
- * Group column and rows that doesn't match filters
- */
-function groupNonPriorityLanguages() {
-  var rowIndex = 0;
-  var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
-  var headers = spreadsheet.getDataRange().getValues()[rowIndex];
-  group_(keepHeaders, headers, rowIndex);
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu("CSV-exporter").addItem("Apply all styles", "applySensibleDefaults").addToUi();      
+}
 
-  var columnIndex = 2;
-  var keepStrings = [];
-  var stringList = spreadsheet.getDataRange().getValues().map(function(value)
-  {
-    return value[columnIndex];
-  });
-  if (keepStrings.length)
-    group_(keepStrings, stringList, columnIndex, true);
-};
+/******************************************************************************
+ *                  Rows Highlighting
+ ******************************************************************************/
+
+function highlighAddModify()
+{
+  highlightRowByColumnText_(1, "Added", "#bbd1a8");
+  highlightRowByColumnText_(1, "Modified", "#ffde97");
+}
 
 function highlightRowByColumnText_(columnNumber, text, color)
 {
@@ -49,10 +45,27 @@ function highlightRowByColumnText_(columnNumber, text, color)
   }
 }
 
-function highlighAddModify()
+/******************************************************************************
+ *                  Range Protection
+ ******************************************************************************/
+
+function protectNonTranslationRelatedRow()
 {
-  highlightRowByColumnText_(1, "Added", "#bbd1a8");
-  highlightRowByColumnText_(1, "Modified", "#ffde97");
+  protectRows_(1, 1);
+  protectColumns_(1, 5);
+}
+
+function removeAllProtections()
+{
+  // Remove all range protections in the spreadsheet that the user has permission to edit.
+  var ss = SpreadsheetApp.getActive();
+  var protections = ss.getProtections(SpreadsheetApp.ProtectionType.RANGE);
+  for (var i = 0; i < protections.length; i++) {
+    var protection = protections[i];
+    if (protection.canEdit()) {
+      protection.remove();
+    }
+  }
 }
 
 function protectRange_(range)
@@ -78,11 +91,9 @@ function protectColumns_(startingFrom, howManyColumns)
   protectRange_(range);
 }
 
-function protectNonTranslationRelatedRow()
-{
-  protectRows_(1, 1);
-  protectColumns_(1, 5);
-}
+/******************************************************************************
+ *                  General Styling
+ ******************************************************************************/
 
 function freezeHeaderAndStyle()
 {
@@ -98,18 +109,28 @@ function wrapWholeSheet()
   range.setWrap(true);
 }
 
-function removeAllProtections()
-{
-  // Remove all range protections in the spreadsheet that the user has permission to edit.
-  var ss = SpreadsheetApp.getActive();
-  var protections = ss.getProtections(SpreadsheetApp.ProtectionType.RANGE);
-  for (var i = 0; i < protections.length; i++) {
-    var protection = protections[i];
-    if (protection.canEdit()) {
-      protection.remove();
-    }
-  }
-}
+/******************************************************************************
+ *                  Column and Row Grouping
+ ******************************************************************************/
+
+/**
+ * Group column and rows that doesn't match filters
+ */
+function groupNonPriorityLanguages() {
+  var rowIndex = 0;
+  var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "es", "fr", "de", "pt_BR", "zh_CN", "pl", "ru", "it", "tr"];
+  var headers = spreadsheet.getDataRange().getValues()[rowIndex];
+  group_(keepHeaders, headers, rowIndex);
+
+  var columnIndex = 2;
+  var keepStrings = [];
+  var stringList = spreadsheet.getDataRange().getValues().map(function(value)
+  {
+    return value[columnIndex];
+  });
+  if (keepStrings.length)
+    group_(keepStrings, stringList, columnIndex, true);
+};
 
 /**
  * @param {Array} filters array of column or row filters
