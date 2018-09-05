@@ -1,0 +1,22 @@
+{
+  "name": "xtm-basic",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "adm-zip": "^0.4.11",
+    "fs-extra": "^7.0.0",
+    "minimist": "^1.2.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js",
+    "create-project": "node index.js --create",
+    "download-project": "node index.js --download",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
