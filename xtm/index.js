@@ -4,21 +4,15 @@ const {createWriteStream, createReadStream} = require("fs");
 const {outputFileSync, removeSync} = require("fs-extra");
 const argv = require("minimist")(process.argv.slice(2));
 const admZip = require("adm-zip");
+const {promisify} = require("util");
+const glob = promisify(require("glob").glob);
 
 // Authentication 
 const {getToken, restApiUrl} = require("./authentication");
 
-// New project creation data
-const name = "Created by API";
 const sourceLanguage = "en_US";
 const targetLanguages = ["de_DE", "es_ES", "ru_RU"];
-const customerId = 23;
 const localesDir = "locales";
-const workflowId = 2926;
-const sourceFile = "desktop-options.json";
-
-// Used for download and upload
-const projectId = 5559;
 
 // Temporary file for downloading locales
 const tempZip = "temp.zip";
@@ -40,6 +34,10 @@ if (argv.create)
 {
   createProject();
 }
+else if (argv.update)
+{
+  updateProject();
+}
 else if (argv.download)
 {
   downloadProject();
@@ -56,9 +54,14 @@ function generateAuthHeader(token)
  */
 function createProject()
 {
+  const name = "Created by API";
+  const customerId = 23;
+  const workflowId = 2926;
+  const sourceFile = "desktop-options.json";
+
   getToken().then(({token}) =>
   {
-    const createProjectOption = {
+    const dataCreateProject = {
       method: "POST",
       uri: `${restApiUrl}/projects`,
       formData: {
@@ -68,7 +71,7 @@ function createProject()
       headers: generateAuthHeader(token),
       json: true
     };
-    return request(createProjectOption);
+    return request(dataCreateProject);
   }).then(({projectId}) =>
   {
     console.log(`project: ${projectId} is created`);
@@ -79,18 +82,56 @@ function createProject()
 }
 
 /**
+ * Add source files to the project
+ * see -> https://wstest2.xtm-intl.com/rest-api/#operation/uploadFilesUsingPOST
+ */
+function updateProject()
+{
+  const projectId = 10704;
+  let filesToUpload = [];
+  glob(`${localesDir}/${sourceLanguage}/*.json`).then((files) =>
+  {
+    filesToUpload = files.reduce((acc, file) =>
+    {
+      const index = Object.keys(acc).length;
+      acc[`files[${index}].file`] = createReadStream(file);
+      return acc;
+    }, {});
+    return getToken();
+  }).then(({token}) => 
+  {
+    filesToUpload.matchType = "MATCH_NAMES"; // Overwrite files
+    const dataUpdateProject = {
+      method: "POST",
+      uri: `${restApiUrl}/projects/${projectId}/files/upload`,
+      formData: filesToUpload,
+      headers: generateAuthHeader(token)
+    };
+    return request(dataUpdateProject);
+  }).then((response) =>
+  {
+    response;
+  }).catch((err) =>
+  {
+    err;
+  });
+}
+
+/**
  * Download the project target files and extract the content
+ * https://wstest2.xtm-intl.com/rest-api/#operation/downloadFilesUsingGET
  */
 function downloadProject()
 {
+  const projectId = 5559;
   getToken().then(({token}) =>
   {
-    const downloadTargetOption = {
+    const dataDownloadProject = {
       method: "GET",
       uri: `${restApiUrl}/projects/${projectId}/files/download?fileType=TARGET`,
       headers: generateAuthHeader(token)
     };
-    request(downloadTargetOption).pipe(createWriteStream(tempZip)).on("close", () => 
+    request(dataDownloadProject).pipe(createWriteStream(tempZip)).on("close", () => 
     {
       console.log("Zip file Downloaded");
       const zip = new admZip(tempZip);
