@@ -15,6 +15,7 @@
   "scripts": {
     "start": "node index.js",
     "create-project": "node index.js --create",
+    "update-project": "node index.js --update",
     "download-project": "node index.js --download",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
