@@ -1,10 +1,13 @@
 
- function getTabId()
- {
-   return parseInt(location.search.replace(/^\?/, ""), 10);
- }
+if (typeof browser == "undefined")
+  window.browser = chrome;
 
- const apiList = [
+function getTabId()
+{
+  return parseInt(location.search.replace(/^\?/, ""), 10);
+}
+
+const apiList = [
   {
     api: "tabs.create",
     args: [{'active': false, 'url': 'http://google.com'}],

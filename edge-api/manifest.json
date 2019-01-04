@@ -21,8 +21,6 @@
      "tabs", 
      "<all_urls>", 
      "contextMenus", 
-     "webRequest", 
-     "webRequestBlocking", 
      "webNavigation", 
      "storage", 
      "unlimitedStorage", 
