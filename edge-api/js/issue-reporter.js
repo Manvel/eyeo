@@ -4,7 +4,7 @@
    return parseInt(location.search.replace(/^\?/, ""), 10);
  }
 
- const datas = [
+ const apiList = [
   {
     api: "tabs.create",
     args: [{'active': false, 'url': 'http://google.com'}],
@@ -28,6 +28,11 @@
   {
     api: "tabs.reload",
     args: [getTabId()]
+  },
+  {
+    api: "tabs.captureVisibleTab",
+    args: [null, {format: "png"}],
+    prop: "stringify"
   }
 ];
 
@@ -36,21 +41,20 @@ function apiTest(api, args, prop)
 {
   const [apiName, method] = api.split(".");
   browser[apiName][method](...args, (result) => {
-    if (prop && !result)
-    {
-      result = result[prop];
-    }
-    else if (prop == "stringify")
+    if (prop == "stringify")
     {
       result = JSON.stringify(result);
+    }
+    else if (prop)
+    {
+      result = result[prop];
     }
     resText += `${api}: ${result}<br> <br>`
     document.querySelector("#result").innerHTML = resText;
   });
-  
 }
 
-for (const {api, args, prop} of datas)
+for (const {api, args, prop} of apiList)
 {
   apiTest(api, args, prop);
 }
