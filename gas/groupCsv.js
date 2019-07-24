@@ -118,7 +118,7 @@ function wrapWholeSheet()
  */
 function groupNonPriorityLanguages() {
   var rowIndex = 0;
-  var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "de", "fr", "es", "it", "pt_BR", "ru", "tr", "zh_CN", "nl", "hu", "pl", "he", "ko", "ar", "ja"];
+  var keepHeaders = ["Type", "Filename", "StringID", "Description", "Placeholders", "en_US", "de", "fr", "es", "it", "pt_BR", "ru", "tr", "zh_CN", "nl", "hu", "pl", "el", "ko", "ar", "ja"];
   var headers = spreadsheet.getDataRange().getValues()[rowIndex];
   group_(keepHeaders, headers, rowIndex);
 
